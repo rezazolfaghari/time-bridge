@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Clockify to GitLab /spend Copier",
+  "version": "1.0.0",
+  "description": "Copy Clockify time entries as GitLab /spend commands with time and date to your clipboard.",
+  "permissions": [
+    "storage",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://*.clockify.me/*",
+    "https://clockify.me/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.clockify.me/*",
+        "https://clockify.me/*"
+      ],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
