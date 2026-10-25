@@ -21,6 +21,10 @@
   border-radius: 4px;
 }
 
+.cl-gitlab-spend-btn.copied:hover {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+}
+
 .cl-gitlab-spend-btn:active {
   transform: scale(0.92) !important;
 }
@@ -95,3 +99,4 @@
   color: #a0a0a8;
   margin-top: 2px;
 }
+

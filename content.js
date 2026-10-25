@@ -383,17 +383,20 @@
 
     const success = await copyToClipboard(command);
     if (success) {
-      // Visual feedback on button
+      // Visual feedback on button: switch to checkmark and keep it as checkmark
       btn.classList.add('copied');
       btn.innerHTML = CHECKMARK_SVG;
 
+      // Trigger pop animation even if clicked again
+      const svg = btn.querySelector('svg');
+      if (svg) {
+        svg.style.animation = 'none';
+        void svg.offsetWidth;
+        svg.style.animation = 'gitlab-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+      }
+
       // Show toast
       showToast(command, description);
-
-      setTimeout(() => {
-        btn.classList.remove('copied');
-        btn.innerHTML = GITLAB_SVG;
-      }, 1800);
     }
   }
 
@@ -409,7 +412,8 @@
     );
     const dateStr = extractDateForEntry(entryEl);
     const command = `${config.customCommand || '/spend'} ${gitlabDuration} ${dateStr}`;
-    btn.title = `Click to copy: ${command}`;
+    const isCopied = btn.classList.contains('copied');
+    btn.title = isCopied ? `Copied! Click to re-copy: ${command}` : `Click to copy: ${command}`;
   }
 
   /**
@@ -495,3 +499,4 @@
 
   console.log('[Clockify-GitLab] Extension loaded and observer active.');
 })();
+
