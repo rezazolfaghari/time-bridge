@@ -1,0 +1,20 @@
+# Local overrides & secrets
+config.local.js
+*.local.*
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors & IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local testing fixture
+sample.html
+

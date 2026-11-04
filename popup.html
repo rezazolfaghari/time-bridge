@@ -1,18 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
-  <title>Clockify to GitLab /spend</title>
+  <title>GitLab /spend Sync</title>
   <style>
     :root {
-      --bg: #18191f;
-      --card-bg: #23242e;
-      --border: #333440;
       --primary: #fc6d26;
-      --primary-hover: #e24329;
-      --text: #ffffff;
-      --text-muted: #9ba1b0;
+      --primary-hover: #ff7f3d;
+      --primary-glow: rgba(252, 109, 38, 0.35);
       --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.3);
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
     }
 
     * {
@@ -22,26 +23,61 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      width: 320px;
-      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      width: 350px;
+      min-height: 510px;
+      background: 
+        radial-gradient(circle at 10% 15%, rgba(252, 109, 38, 0.15) 0%, transparent 45%),
+        radial-gradient(circle at 90% 85%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
+        #111218;
       color: var(--text);
       padding: 16px;
       font-size: 13px;
+      position: relative;
+      overflow-x: hidden;
+      transition: direction 0.2s ease;
     }
 
+    body[dir="rtl"] {
+      font-family: "Vazirmatn", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Tahoma, sans-serif;
+      direction: rtl;
+    }
+
+    body[dir="ltr"] {
+      direction: ltr;
+    }
+
+    /* Header */
     .header {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    .logo {
-      width: 26px;
-      height: 26px;
+    .logo-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: rgba(252, 109, 38, 0.15);
+      border: 1px solid rgba(252, 109, 38, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px var(--primary-glow);
+      flex-shrink: 0;
+    }
+
+    .logo-badge img {
+      width: 20px;
+      height: 20px;
+    }
+
+    .title-group {
+      display: flex;
+      flex-direction: column;
     }
 
     .title {
@@ -51,17 +87,25 @@
       letter-spacing: -0.2px;
     }
 
+    .subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
     .status-badge {
-      margin-left: auto;
+      margin-inline-start: auto;
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
       font-size: 11px;
       color: var(--success);
       background: rgba(16, 185, 129, 0.12);
-      padding: 3px 7px;
-      border-radius: 12px;
-      font-weight: 500;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-weight: 600;
+      box-shadow: 0 0 10px var(--success-glow);
+      white-space: nowrap;
     }
 
     .status-dot {
@@ -69,25 +113,218 @@
       height: 6px;
       border-radius: 50%;
       background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+      animation: pulse 2s infinite ease-in-out;
     }
 
-    .section {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    /* Language Selection Bar */
+    .lang-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 10px;
+      padding: 7px 11px;
       margin-bottom: 12px;
     }
 
-    .section-title {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-muted);
-      margin-bottom: 10px;
+    .lang-label-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      color: #cbd5e1;
       font-weight: 600;
     }
 
+    .lang-icon {
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .glass-select {
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 7px;
+      padding: 4px 8px;
+      color: #fff;
+      font-size: 11.5px;
+      outline: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+
+    .glass-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    .glass-select option {
+      background: #181920;
+      color: #f1f5f9;
+    }
+
+    /* Subtle Glassmorphic Card */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(18px) saturate(160%);
+      -webkit-backdrop-filter: blur(18px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      box-shadow: 
+        0 8px 24px rgba(0, 0, 0, 0.25),
+        inset 0 1px 1px rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 13px 14px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      box-shadow: 
+        0 10px 28px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.18);
+    }
+
+    /* Section Titles */
+    .section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #cbd5e1;
+      margin-bottom: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-title span.dot {
+      width: 4px;
+      height: 4px;
+      background: var(--primary);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--primary);
+      flex-shrink: 0;
+    }
+
+    /* Inputs */
+    .form-group {
+      margin-bottom: 10px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 11.5px;
+      margin-bottom: 5px;
+      color: #e2e8f0;
+      font-weight: 500;
+    }
+
+    .glass-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 8px 11px;
+      color: #fff;
+      font-size: 12px;
+      outline: none;
+      direction: ltr !important;
+      text-align: left !important;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    .glass-input:focus {
+      border-color: var(--primary);
+      box-shadow: 
+        0 0 14px var(--primary-glow),
+        inset 0 1px 2px rgba(0, 0, 0, 0.3);
+      background: rgba(0, 0, 0, 0.45);
+    }
+
+    .input-hint {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+
+    /* Buttons */
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    button {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #fc6d26, #e24329);
+      color: #fff;
+      box-shadow: 
+        0 4px 14px var(--primary-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #ff7f3d, #ec4d33);
+      box-shadow: 
+        0 6px 18px rgba(252, 109, 38, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.97);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #e2e8f0;
+      backdrop-filter: blur(8px);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.13);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary:active {
+      transform: scale(0.97);
+    }
+
+    /* Toggle switches */
     .option-row {
       display: flex;
       align-items: center;
@@ -102,7 +339,8 @@
 
     .option-label {
       font-size: 12.5px;
-      color: var(--text);
+      color: #f1f5f9;
+      font-weight: 500;
     }
 
     .option-hint {
@@ -110,12 +348,12 @@
       color: var(--text-muted);
     }
 
-    /* Modern Switch */
+    /* Glass Modern Switch */
     .switch {
       position: relative;
       display: inline-block;
-      width: 36px;
-      height: 20px;
+      width: 38px;
+      height: 22px;
       flex-shrink: 0;
     }
 
@@ -128,13 +366,12 @@
     .slider {
       position: absolute;
       cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #3b3c4a;
-      transition: .2s;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       border-radius: 20px;
+      backdrop-filter: blur(6px);
     }
 
     .slider:before {
@@ -142,58 +379,191 @@
       content: "";
       height: 14px;
       width: 14px;
-      left: 3px;
       bottom: 3px;
-      background-color: white;
-      transition: .2s;
+      background: #ffffff;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     }
 
-    input:checked + .slider {
-      background-color: var(--primary);
+    /* LTR switch positioning */
+    body:not([dir="rtl"]) .slider:before,
+    body[dir="ltr"] .slider:before {
+      left: 3px;
+      right: auto;
     }
-
-    input:checked + .slider:before {
+    body:not([dir="rtl"]) input:checked + .slider:before,
+    body[dir="ltr"] input:checked + .slider:before {
       transform: translateX(16px);
     }
 
-    /* Live Preview */
+    /* RTL switch positioning */
+    body[dir="rtl"] .slider:before {
+      right: 3px;
+      left: auto;
+    }
+    body[dir="rtl"] input:checked + .slider:before {
+      transform: translateX(-16px);
+    }
+
+    input:checked + .slider {
+      background: linear-gradient(135deg, #fc6d26, #e24329);
+      border-color: rgba(252, 109, 38, 0.5);
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    /* Live Preview Box */
     .preview-box {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      background: #111216;
-      border: 1px solid #2d2e38;
-      border-radius: 6px;
-      padding: 10px;
-      color: #60a5fa;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #38bdf8;
       font-size: 12px;
-      word-break: break-all;
-      user-select: all;
+      direction: ltr !important;
+      text-align: left !important;
+      font-weight: 500;
+    }
+
+    /* Status Message Pill */
+    .status-msg {
+      font-size: 11.5px;
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      display: none;
+      line-height: 1.45;
+      backdrop-filter: blur(10px);
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .status-msg.success {
+      display: block;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      box-shadow: 0 0 12px var(--success-glow);
+    }
+
+    .status-msg.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
+    }
+
+    .status-msg.info {
+      display: block;
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
     }
 
     .footer {
       text-align: center;
       font-size: 11px;
       color: var(--text-muted);
-      margin-top: 4px;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    .footer code {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 1px 4px;
+      border-radius: 4px;
+      color: #e2e8f0;
+      font-family: monospace;
     }
   </style>
 </head>
 <body>
+  <!-- Header -->
   <div class="header">
-    <img src="icons/icon48.png" alt="Logo" class="logo">
-    <div class="title">GitLab /spend Copier</div>
+    <div class="logo-badge">
+      <img src="icons/icon48.png" alt="Logo">
+    </div>
+    <div class="title-group">
+      <div class="title" data-i18n="appName">GitLab /spend Sync</div>
+      <div class="subtitle" data-i18n="appSubtitle">Directly sync Clockify time to GitLab</div>
+    </div>
     <div class="status-badge">
       <div class="status-dot"></div>
-      Active
+      <span data-i18n="activeStatus">Active</span>
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-title">Settings</div>
+  <!-- Language Selection Bar -->
+  <div class="lang-bar">
+    <div class="lang-label-group">
+      <span class="lang-icon">🌐</span>
+      <span data-i18n="selectLanguage">Language:</span>
+    </div>
+    <select id="languageSelect" class="glass-select" aria-label="Select Language">
+      <option value="en">English (US)</option>
+      <option value="fa">فارسی (Persian)</option>
+      <option value="de">Deutsch (German)</option>
+      <option value="fr">Français (French)</option>
+      <option value="zh">简体中文 (Chinese)</option>
+      <option value="ar">العربية (Arabic)</option>
+      <option value="ru">Русский (Russian)</option>
+      <option value="hi">हिन्दी (Hindi)</option>
+      <option value="es">Español (Spanish)</option>
+      <option value="tr">Türkçe (Turkish)</option>
+    </select>
+  </div>
+
+  <!-- Server & Authentication Settings -->
+  <div class="glass-card">
+    <div class="section-title">
+      <span class="dot"></span>
+      <span data-i18n="serverSection">Server & Authentication</span>
+    </div>
+    
+    <div class="form-group">
+      <label for="gitlabHost" data-i18n="serverHostLabel">GitLab Server URL:</label>
+      <input type="text" id="gitlabHost" class="glass-input" placeholder="https://gitlab.com">
+      <div class="input-hint" data-i18n="serverHostHint">Your GitLab instance domain (e.g. https://gitlab.com)</div>
+    </div>
+
+    <div class="form-group" style="margin-top: 8px;">
+      <label for="gitlabToken" data-i18n="tokenLabel">Personal Access Token:</label>
+      <input type="password" id="gitlabToken" class="glass-input" placeholder="glpat-xxxxxxxxxxxxxxxxxxxx">
+      <div class="input-hint" data-i18n="tokenHint">Token with 'api' scope (from GitLab Settings -> Access Tokens)</div>
+    </div>
+
+    <div class="btn-row">
+      <button id="saveBtn" class="btn-primary">
+        <span>💾</span>
+        <span data-i18n="saveBtn">Save Settings</span>
+      </button>
+      <button id="testBtn" class="btn-secondary">
+        <span>⚡</span>
+        <span data-i18n="testBtn">Test Connection</span>
+      </button>
+    </div>
+
+    <div id="statusMsg" class="status-msg"></div>
+  </div>
+
+  <!-- Time Format -->
+  <div class="glass-card">
+    <div class="section-title">
+      <span class="dot"></span>
+      <span data-i18n="timeFormatSection">Time Format</span>
+    </div>
     <label class="option-row">
       <div>
-        <div class="option-label">Include Seconds</div>
-        <div class="option-hint">e.g. 1h 51m 11s vs 1h 51m</div>
+        <div class="option-label" data-i18n="includeSecondsLabel">Include seconds</div>
+        <div class="option-hint" data-i18n="includeSecondsHint">e.g. 1h 51m 11s instead of 1h 51m</div>
       </div>
       <div class="switch">
         <input type="checkbox" id="includeSeconds" checked>
@@ -203,8 +573,8 @@
 
     <label class="option-row" style="margin-top: 10px;">
       <div>
-        <div class="option-label">Round Minutes</div>
-        <div class="option-hint">When seconds are omitted (30s+ rounds up)</div>
+        <div class="option-label" data-i18n="roundMinutesLabel">Round minutes</div>
+        <div class="option-hint" data-i18n="roundMinutesHint">When seconds are excluded (rounds up at >= 30s)</div>
       </div>
       <div class="switch">
         <input type="checkbox" id="roundMinutes">
@@ -213,15 +583,20 @@
     </label>
   </div>
 
-  <div class="section">
-    <div class="section-title">Live Preview</div>
+  <!-- Output Preview -->
+  <div class="glass-card">
+    <div class="section-title">
+      <span class="dot"></span>
+      <span data-i18n="previewSection">Command Preview</span>
+    </div>
     <div class="preview-box" id="previewBox">/spend 1h 51m 11s 2026-10-21</div>
   </div>
 
   <div class="footer">
-    Works automatically on Clockify time entries.
+    <span data-i18n="footerHint">You can also predefine settings directly in config.js</span>
   </div>
 
+  <script src="i18n.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
